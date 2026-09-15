@@ -1,1 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Space Colony Sandbox Engine</title>
+    <style>
+        /* DESIGN MATRIX CHASSIS */
+        body {
+            font-family: 'Courier New', monospace;
+            background-color: #080911;
+            color: #bfa57a;
+            text-align: center;
+            margin: 0;
+            padding-top: 60px;
+        }
+        .chassis-box {
+            width: 450px;
+            margin: 0 auto;
+            background-color: #0f1122;
+            border: 2px solid #3c1e7a;
+            border-radius: 6px;
+            padding: 30px;
+            box-shadow: 0 0 25px rgba(60, 30, 122, 0.6);
+        }
+        h1 { color: #51e5ff; letter-spacing: 2px; margin-bottom: 5px; }
+        .dashboard { font-size: 36px; font-weight: bold; color: #51e5ff; margin: 20px 0; }
+        .telemetry { font-size: 16px; color: #8fa0ba; margin-bottom: 25px; }
+        
+        /* CLICK MECHANIC HUD */
+        #extractBtn {
+            font-size: 20px;
+            font-family: inherit;
+            font-weight: bold;
+            padding: 15px 40px;
+            background-color: #1a153b;
+            color: #51e5ff;
+            border: 2px solid #51e5ff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        #extractBtn:hover { background-color: #51e5ff; color: #080911; box-shadow: 0 0 15px #51e5ff; }
+        
+        /* SHOP STRUCTURE SLOTS */
+        .store-slot {
+            background-color: #0a0b14;
+            border: 1px solid #bfa57a;
+            border-radius: 4px;
+            padding: 15px;
+            margin-top: 25px;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .store-info h3 { margin: 0 0 5px 0; color: #ffffff; font-size: 16px; }
+        .store-info p { margin: 0; font-size: 13px; color: #bfa57a; }
+        .buy-btn {
+            padding: 8px 16px;
+            background-color: #1f1d24;
+            border: 1px solid #bfa57a;
+            color: #ffffff;
+            font-family: inherit;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .buy-btn:hover { background-color: #bfa57a; color: black; }
+    </style>
+</head>
+<body>
 
+    <div class="chassis-box">
+        <h1>ORBITAL SANDBOX ENGINE</h1>
+        <p style="margin: 0; font-size: 12px; color: #6e7b91;">SYSTEM REGISTRY: ACTIVE</p>
+        
+        <!-- CORE COUNTER HUD DISPLAYS -->
+        <div class="dashboard"><span id="dustCount">0</span> DUST</div>
+        <div class="telemetry">Net Passive Velocity: <span id="passiveRate">0</span> DUST/SEC</div>
+        
+        <button id="extractBtn">DEPLOY HARVESTER LAYER</button>
+
+        <!-- AUTOMATED PIPELINE STORES -->
+        <div class="store-slot">
+            <div class="store-info">
+                <h3>Upgrade Quantum Drill</h3>
+                <p>Cost: <span id="drillCost">15</span> Dust | Power: +1 Per Tap</p>
+            </div>
+            <button class="buy-btn" id="buyDrillBtn">UPGRADE</button>
+        </div>
+
+        <div class="store-slot">
+            <div class="store-info">
+                <h3>Launch Autonomous Drone</h3>
+                <p>Cost: <span id="droneCost">50</span> Dust | Output: +1/sec</p>
+            </div>
+            <button class="buy-btn" id="buyDroneBtn">DEPLOY</button>
+        </div>
+
+        <!-- NEW PRESTIGE SYSTEM SLOT (Page 4 Blueprint) -->
+        <div class="store-slot" style="border-color: #e040fb; background-color: #12091c;">
+            <div class="store-info">
+                <h3 style="color: #e040fb;">Quantum Prestige Trigger</h3>
+                <p>Requires: 1,000 Dust | Current Tokens: <span id="prestigeCount">0</span></p>
+                <p style="color: #e040fb; font-size: 11px; margin-top: 3px;">Perks: Permanent Global Multiplier active.</p>
+            </div>
+            <button class="buy-btn" id="prestigeBtn" style="border-color: #e040fb; color: #e040fb;">RESET STATE</button>
+        </div>
+    </div>
+
+    <script>
+        // ===================================================
+        // BLOCK 1: GLOBAL STATE TRACKERS (Variables)
+        // ===================================================
+        let spaceDust = 0;
+        let extractionPower = 1;
+        let drillPrice = 15;
+        
+        let passiveVelocity = 0; 
+        let dronePrice = 50;
+
+        // NEW PAGE 4 VARIABLE LIFTS
+        let prestigeTokens = 0;
+        let globalMultiplier = 1;
+
+        // ===================================================
+        // BLOCK 2: THE DOM REGISTER (Interface Hooks)
+        // ===================================================
+        const dustDisplay = document.getElementById("dustCount");
+        const rateDisplay = document.getElementById("passiveRate");
+        const extractButton = document.getElementById("extractBtn");
+        
+        const drillCostDisplay = document.getElementById("drillCost");
+        const buyDrillButton = document.getElementById("buyDrillBtn");
+        
+        const droneCostDisplay = document.getElementById("droneCost");
+        const buyDroneButton = document.getElementById("buyDroneBtn");
+
+        // NEW PAGE 4 INTERFACE LINKS
+        const prestigeCountDisplay = document.getElementById("prestigeCount");
+        const prestigeButton = document.getElementById("prestigeBtn");
+
+        // ===================================================
+        // BLOCK 3: SYSTEM INTERACTION LOGIC (Click Engine)
+        // ===================================================
+        extractButton.addEventListener("click", function() {
+            // Amplified by Page 4's prestige multiplier loop
+            spaceDust = spaceDust + (extractionPower * globalMultiplier);
+            dustDisplay.innerText = spaceDust;
+        });
+
+        // ===================================================
+        // BLOCK 4: THE DRILL MULTIPLIER SHOP PIPELINE
+        // ===================================================
+        buyDrillButton.addEventListener("click", function() {
+            if (spaceDust >= drillPrice) {
+                spaceDust = spaceDust - drillPrice;
+                extractionPower = extractionPower + 1;
+                drillPrice = Math.floor(drillPrice * 1.45);
+
+                dustDisplay.innerText = spaceDust;
+                drillCostDisplay.innerText = drillPrice;
+            } else {
+                alert("Alert: Insufficient raw mineral balance.");
+            }
+        });
+
+        // ===================================================
+        // BLOCK 5: THE PASSTHROUGH AUTO-DRONE PIPELINE
+        // ===================================================
+        buyDroneButton.addEventListener("click", function() {
+            if (spaceDust >= dronePrice) {
+                spaceDust = spaceDust - dronePrice;
+                passiveVelocity = passiveVelocity + 1;
+                dronePrice = Math.floor(dronePrice * 1.55);
+
+                dustDisplay.innerText = spaceDust;
+                droneCostDisplay.innerText = dronePrice;
+                rateDisplay.innerText = passiveVelocity;
+            } else {
+                alert("Alert: Drone fabrication components unavailable.");
+            }
+        });
+
+        // ===================================================
+        // NEW BLOCK: THE QUANTUM PRESTIGE EQUATION
+        // ===================================================
+        prestigeButton.addEventListener("click", function() {
+            if (spaceDust >= 1000) {
+                prestigeTokens = prestigeTokens + 1;
+                globalMultiplier = 1 + (prestigeTokens * 2); // Adds a permanent 2x per token!
+
+                // Wipe the starter slots back to ground zero
+                spaceDust = 0;
+                extractionPower = 1;
+                drillPrice = 15;
+                passiveVelocity = 0;
+                dronePrice = 50;
+
+                // Full visual environment layout sync
+                dustDisplay.innerText = spaceDust;
+                rateDisplay.innerText = passiveVelocity;
+                drillCostDisplay.innerText = drillPrice;
+                droneCostDisplay.innerText = dronePrice;
+                prestigeCountDisplay.innerText = prestigeTokens;
+
+                alert("System Reset Complete: Global multiplier has advanced!");
+            } else {
+                alert("Alert: Insufficient raw mineral balance. Minimum 1,000 Dust required.");
+            }
+        });
+
+        // ===================================================
+        // BLOCK 6: THE ASYNCHRONOUS ENGINE CLOCK (1000ms Loop)
+        // ===================================================
+        setInterval(function() {
+            // Amplified by Page 4's prestige multiplier loop
+            spaceDust = spaceDust + (passiveVelocity * globalMultiplier);
+            dustDisplay.innerText = spaceDust;
+        }, 1000);
+
+    </script>
+</body>
+</html>
