@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Space Colony Fleet Command</title>
+  <title>Space Colony Fleet Command OS</title>
   <style>
     body {
       background-color: #0b0c10;
@@ -26,25 +26,26 @@
       padding: 30px;
       text-align: center;
       box-shadow: 0 0 20px rgba(102, 252, 241, 0.2);
-      width: 400px;
+      width: 440px;
     }
 
     h1 { color: #66fcf1; margin-bottom: 5px; font-size: 24px; }
-    .stat-box { font-size: 18px; margin: 15px 0; color: #45f3ff; }
+    .stat-box { font-size: 16px; margin: 15px 0; color: #45f3ff; line-height: 1.6; }
     
     button {
       background-color: transparent;
       border: 2px solid #66fcf1;
       color: #66fcf1;
-      padding: 12px 24px;
-      font-size: 16px;
+      padding: 10px 20px;
+      font-size: 14px;
       font-family: 'Courier New', monospace;
       font-weight: bold;
       cursor: pointer;
-      margin: 10px 0;
+      margin: 6px 0;
       transition: all 0.2s ease;
       width: 100%;
       border-radius: 5px;
+      text-align: left;
     }
 
     button:hover {
@@ -53,13 +54,12 @@
       box-shadow: 0 0 15px rgba(102, 252, 241, 0.5);
     }
 
-    .shop-box {
-      margin-top: 25px;
+    .section-box {
+      margin-top: 15px;
       border-top: 1px solid #45f3ff;
-      padding-top: 15px;
+      padding-top: 10px;
     }
 
-    /* Dynamic UI Animation Module */
     .error-popup {
       position: absolute;
       color: #ff4757;
@@ -80,108 +80,178 @@
 <body>
 
   <div id="game-container">
-    <h1>FLEET COMMAND OS</h1>
+    <h1>FLEET COMMAND OS (v2.0)</h1>
     <div id="prestige-display" style="color: #ffa500; font-size: 14px; font-weight: bold;">Rank: Cosmic Cadet (Prestige 0)</div>
     
     <div class="stat-box">
       🚀 Space Dust: <span id="dust-count">0</span><br>
-      ⚡ Multiplier: <span id="multi-display">1x</span>
+      ⚡ Click Value: <span id="click-val-display">1</span><br>
+      ⚙️ Passive Income: <span id="passive-display">0</span>/sec<br>
+      🌀 Global Multiplier: <span id="multi-display">1x</span>
     </div>
 
-    <button id="click-btn">EXTRACT SPACE DUST</button>
+    <!-- PRIMARY EXTRACTION COMMAND DECK -->
+    <div class="section-box">
+      <h4 style="color: #66fcf1; margin: 5px 0;">MANUAL EXTRACTION MODS</h4>
+      <button id="click-btn">🔹 EXTRACT SPACE DUST</button>
+      <button id="overdrive-btn">🔸 QUANTUM OVERDRIVE CLICK (Cost: 100 Dust)</button>
+    </div>
 
-    <div class="shop-box">
-      <h3 style="color: #45f3ff; margin: 5px 0;">UPGRADE BAY</h3>
-      <button id="buy-drone">BUY EXTRACTOR DRONE (Cost: 15 Dust)</button>
-      <button id="prestige-btn" style="border-color: #ffa500; color: #ffa500; margin-top: 15px;">INITIATE QUANTUM RESET</button>
+    <!-- AUTOMATED FACTORY PRODUCTION SLOTS -->
+    <div class="section-box">
+      <h4 style="color: #45f3ff; margin: 5px 0;">UPGRADE & AUTOMATION BAY</h4>
+      <button id="buy-drone">🛸 BUY EXTRACTOR DRONE (Cost: 15 Dust) [+1/Click]</button>
+      <button id="buy-refinery">🏭 BUILD COSMIC REFINERY (Cost: 150 Dust) [+5 Passive/sec]</button>
+    </div>
+
+    <!-- QUANTUM FRAMEWORK OVERHAUL -->
+    <div class="section-box">
+      <h4 style="color: #ffa500; margin: 5px 0;">EXPERIMENTAL SECTOR</h4>
+      <button id="prestige-btn" style="border-color: #ffa500; color: #ffa500;">🌀 INITIATE QUANTUM RESET (Next Cost: 500 Dust)</button>
     </div>
   </div>
 
   <script>
-    // --- FOUNDATIONAL STATE SYSTEM ---
+    // --- FOUNDATIONAL BALANCING STATE ---
     let spaceDust = 0;
     let extractionPower = 1;
-    let droneCost = 15;
+    let baseClickUpgrade = 1;
     
-    // Prestige Multiplier Variables
+    // Core Costs
+    let droneCost = 15;
+    let refineryCost = 150;
+    let overdriveCost = 100;
+    let basePrestigeCost = 500;
+    let currentPrestigeCost = 500;
+    
+    // Automation Value Tracking
+    let passiveIncomeRate = 0;
+    
+    // Prestige Progress Multipliers
     let prestigeLevel = 0;
     let globalMultiplier = 1;
 
-    // --- DOM LINK CHANNELS ---
+    // --- DOM HARDWARE LINK CHANNELS ---
     const dustDisplay = document.getElementById("dust-count");
+    const clickValDisplay = document.getElementById("click-val-display");
+    const passiveDisplay = document.getElementById("passive-display");
     const multiDisplay = document.getElementById("multi-display");
     const prestigeDisplay = document.getElementById("prestige-display");
-    const droneBtn = document.getElementById("buy-drone");
+    
     const clickBtn = document.getElementById("click-btn");
+    const overdriveBtn = document.getElementById("overdrive-btn");
+    const droneBtn = document.getElementById("buy-drone");
+    const refineryBtn = document.getElementById("buy-refinery");
     const prestigeBtn = document.getElementById("prestige-btn");
 
-    // --- CORE LOGIC MOTORS ---
+    // --- BACKGROUND AUTOMATION ENGINE (The Clock) ---
+    setInterval(() => {
+      // Passive income adds processing fragments every single second, magnified by your prestige level
+      spaceDust += (passiveIncomeRate * globalMultiplier);
+      updateUserInterface();
+    }, 1000);
 
-    // 1. Extraction Command Loop
+    // --- INTERACTIVE SYSTEM MOTORS ---
+
+    // 1. Manual Left-Click Extraction
     clickBtn.addEventListener("click", () => {
-      spaceDust += extractionPower * globalMultiplier;
+      spaceDust += (extractionPower * baseClickUpgrade) * globalMultiplier;
       updateUserInterface();
     });
 
-    // 2. Upgrade Verification Loop
+    // 2. NEW MANIFESTATION: Quantum Overdrive Multi-Click Mod
+    overdriveBtn.addEventListener("click", (event) => {
+      if (spaceDust >= overdriveCost) {
+        spaceDust -= overdriveCost;
+        baseClickUpgrade += 3; // Permanently spikes your manual extraction volume
+        overdriveCost = Math.round(overdriveCost * 1.8);
+        updateUserInterface();
+      } else {
+        triggerErrorAlert(`ERROR: REQUIRES ${overdriveCost} SPACE DUST!`, event);
+      }
+    });
+
+    // 3. Drone Upgrade Protocol
     droneBtn.addEventListener("click", (event) => {
       if (spaceDust >= droneCost) {
         spaceDust -= droneCost;
         extractionPower += 1;
-        droneCost = Math.round(droneCost * 1.5); // Exponential price scaling multiplier
+        droneCost = Math.round(droneCost * 1.5);
         updateUserInterface();
       } else {
-        // Triggering the custom floating alert instead of a boring browser popup
-        triggerErrorAlert("ERROR: INSUFFICIENT SPACE DUST!", event);
+        triggerErrorAlert(`ERROR: REQUIRES ${droneCost} SPACE DUST!`, event);
       }
     });
 
-    // 3. Quantum Prestige Reset Engine
+    // 4. NEW MANIFESTATION: Cosmic Refinery Passive Machine
+    refineryBtn.addEventListener("click", (event) => {
+      if (spaceDust >= refineryCost) {
+        spaceDust -= refineryCost;
+        passiveIncomeRate += 5; // Adds a baseline of +5 dust generated passively per second
+        refineryCost = Math.round(refineryCost * 1.6);
+        updateUserInterface();
+      } else {
+        triggerErrorAlert(`ERROR: REQUIRES ${refineryCost} SPACE DUST!`, event);
+      }
+    });
+
+    // 5. UPGRADED FRAMEWORK: Exponential Prestige Scaling Motor
     prestigeBtn.addEventListener("click", (event) => {
-      // User must hit at least 500 space dust to justify a hardware prestige wipe
-      if (spaceDust >= 500) {
+      if (spaceDust >= currentPrestigeCost) {
         prestigeLevel++;
-        globalMultiplier = Math.pow(2.75, prestigeLevel); // Compounding x2.75 scaling math
+        globalMultiplier = Math.pow(2.75, prestigeLevel); // Compounding x2.75 multiplier payout
         
-        // Resetting the baseline game loops
+        // YOUR SCALE REQUEST: Compounding exponential price scaling formula (2.5x increase per level)
+        currentPrestigeCost = Math.round(basePrestigeCost * Math.pow(2.5, prestigeLevel));
+        
+        // Hard hardware registry flush: resets standard items to balance progression velocity
         spaceDust = 0;
         extractionPower = 1;
+        baseClickUpgrade = 1;
+        passiveIncomeRate = 0;
+        
         droneCost = 15;
+        refineryCost = 150;
+        overdriveCost = 100;
         
         updateUserInterface();
-        triggerErrorAlert(`PRESTIGE SYNC COMPLETE! MULTIPLIER LEVEL UP!`, event);
+        triggerErrorAlert(`QUANTUM EVOLUTION EXECUTION COMPLETE!`, event);
       } else {
-        triggerErrorAlert("REQUIRES 500 SPACE DUST TO CONVERT CALIBRATION!", event);
+        triggerErrorAlert(`COMPILATION ERROR: TARGET REQUIRES ${currentPrestigeCost} DUST!`, event);
       }
     });
 
-    // 4. Dynamic UI Rendering Module
+    // --- RE-RENDERING RUNTIME PANEL ---
     function updateUserInterface() {
       dustDisplay.innerText = Math.round(spaceDust);
+      clickValDisplay.innerText = Math.round((extractionPower * baseClickUpgrade) * globalMultiplier);
+      passiveDisplay.innerText = Math.round(passiveIncomeRate * globalMultiplier);
       multiDisplay.innerText = `${globalMultiplier.toFixed(2)}x`;
       prestigeDisplay.innerText = `Rank: Fleet Admiral (Prestige ${prestigeLevel})`;
-      droneBtn.innerText = `BUY EXTRACTOR DRONE (Cost: ${droneCost} Dust)`;
+      
+      // Update Button Label Parameters with new scaling values
+      droneBtn.innerText = `🛸 BUY EXTRACTOR DRONE (Cost: ${droneCost} Dust) [+1/Click]`;
+      refineryBtn.innerText = `🏭 BUILD COSMIC REFINERY (Cost: ${refineryCost} Dust) [+5 Passive/sec]`;
+      overdriveBtn.innerText = `🔸 QUANTUM OVERDRIVE CLICK (Cost: ${overdriveCost} Dust) [+3/Click Scale]`;
+      prestigeBtn.innerText = `🌀 INITIATE QUANTUM RESET (Next Cost: ${currentPrestigeCost} Dust)`;
     }
 
-    // 5. The Floating Error Script (Hardware Interface System)
+    // --- FLOATING TEXT ERROR SYSTEM ---
     function triggerErrorAlert(message, event) {
       const errorText = document.createElement("div");
       errorText.className = "error-popup";
       errorText.innerText = message;
 
-      // Map the coordinate telemetry parameters to the exact pixel location of the mouse cursor
       errorText.style.left = event.clientX + "px";
       errorText.style.top = event.clientY + "px";
 
-      // If the event layout was triggered via a script call instead of a true click, anchor it centrally
       if (!event.clientX) {
         errorText.style.left = "50%";
-        errorText.style.top = "40%";
+        errorText.style.top = "45%";
       }
 
       document.body.appendChild(errorText);
 
-      // Automated Memory Garbage Collection
       setTimeout(() => {
         errorText.remove();
       }, 1200);
