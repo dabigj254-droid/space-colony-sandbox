@@ -1,223 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Space Colony Sandbox Engine</title>
-    <style>
-        /* DESIGN MATRIX CHASSIS */
-        body {
-            font-family: 'Courier New', monospace;
-            background-color: #080911;
-            color: #bfa57a;
-            text-align: center;
-            margin: 0;
-            padding-top: 60px;
-        }
-        .chassis-box {
-            width: 450px;
-            margin: 0 auto;
-            background-color: #0f1122;
-            border: 2px solid #3c1e7a;
-            border-radius: 6px;
-            padding: 30px;
-            box-shadow: 0 0 25px rgba(60, 30, 122, 0.6);
-        }
-        h1 { color: #51e5ff; letter-spacing: 2px; margin-bottom: 5px; }
-        .dashboard { font-size: 36px; font-weight: bold; color: #51e5ff; margin: 20px 0; }
-        .telemetry { font-size: 16px; color: #8fa0ba; margin-bottom: 25px; }
-        
-        /* CLICK MECHANIC HUD */
-        #extractBtn {
-            font-size: 20px;
-            font-family: inherit;
-            font-weight: bold;
-            padding: 15px 40px;
-            background-color: #1a153b;
-            color: #51e5ff;
-            border: 2px solid #51e5ff;
-            border-radius: 4px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        #extractBtn:hover { background-color: #51e5ff; color: #080911; box-shadow: 0 0 15px #51e5ff; }
-        
-        /* SHOP STRUCTURE SLOTS */
-        .store-slot {
-            background-color: #0a0b14;
-            border: 1px solid #bfa57a;
-            border-radius: 4px;
-            padding: 15px;
-            margin-top: 25px;
-            text-align: left;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .store-info h3 { margin: 0 0 5px 0; color: #ffffff; font-size: 16px; }
-        .store-info p { margin: 0; font-size: 13px; color: #bfa57a; }
-        .buy-btn {
-            padding: 8px 16px;
-            background-color: #1f1d24;
-            border: 1px solid #bfa57a;
-            color: #ffffff;
-            font-family: inherit;
-            cursor: pointer;
-            font-weight: bold;
-        }
-        .buy-btn:hover { background-color: #bfa57a; color: black; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Space Colony Fleet Command</title>
+  <style>
+    body {
+      background-color: #0b0c10;
+      color: #c5c6c7;
+      font-family: 'Courier New', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      overflow-x: hidden;
+      user-select: none;
+    }
+
+    #game-container {
+      background-color: #1f2833;
+      border: 2px solid #66fcf1;
+      border-radius: 10px;
+      padding: 30px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(102, 252, 241, 0.2);
+      width: 400px;
+    }
+
+    h1 { color: #66fcf1; margin-bottom: 5px; font-size: 24px; }
+    .stat-box { font-size: 18px; margin: 15px 0; color: #45f3ff; }
+    
+    button {
+      background-color: transparent;
+      border: 2px solid #66fcf1;
+      color: #66fcf1;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 10px 0;
+      transition: all 0.2s ease;
+      width: 100%;
+      border-radius: 5px;
+    }
+
+    button:hover {
+      background-color: #66fcf1;
+      color: #0b0c10;
+      box-shadow: 0 0 15px rgba(102, 252, 241, 0.5);
+    }
+
+    .shop-box {
+      margin-top: 25px;
+      border-top: 1px solid #45f3ff;
+      padding-top: 15px;
+    }
+
+    /* Dynamic UI Animation Module */
+    .error-popup {
+      position: absolute;
+      color: #ff4757;
+      font-family: 'Courier New', monospace;
+      font-weight: bold;
+      font-size: 16px;
+      pointer-events: none;
+      z-index: 9999;
+      animation: fadeUp 1.2s ease-out forwards;
+    }
+
+    @keyframes fadeUp {
+      0% { opacity: 1; transform: translateY(0px) scale(1); }
+      100% { opacity: 0; transform: translateY(-50px) scale(0.85); }
+    }
+  </style>
 </head>
 <body>
 
-    <div class="chassis-box">
-        <h1>ORBITAL SANDBOX ENGINE</h1>
-        <p style="margin: 0; font-size: 12px; color: #6e7b91;">SYSTEM REGISTRY: ACTIVE</p>
-        
-        <!-- CORE COUNTER HUD DISPLAYS -->
-        <div class="dashboard"><span id="dustCount">0</span> DUST</div>
-        <div class="telemetry">Net Passive Velocity: <span id="passiveRate">0</span> DUST/SEC</div>
-        
-        <button id="extractBtn">DEPLOY HARVESTER LAYER</button>
-
-        <!-- AUTOMATED PIPELINE STORES -->
-        <div class="store-slot">
-            <div class="store-info">
-                <h3>Upgrade Quantum Drill</h3>
-                <p>Cost: <span id="drillCost">15</span> Dust | Power: +1 Per Tap</p>
-            </div>
-            <button class="buy-btn" id="buyDrillBtn">UPGRADE</button>
-        </div>
-
-        <div class="store-slot">
-            <div class="store-info">
-                <h3>Launch Autonomous Drone</h3>
-                <p>Cost: <span id="droneCost">50</span> Dust | Output: +1/sec</p>
-            </div>
-            <button class="buy-btn" id="buyDroneBtn">DEPLOY</button>
-        </div>
-
-        <!-- NEW PRESTIGE SYSTEM SLOT (Page 4 Blueprint) -->
-        <div class="store-slot" style="border-color: #e040fb; background-color: #12091c;">
-            <div class="store-info">
-                <h3 style="color: #e040fb;">Quantum Prestige Trigger</h3>
-                <p>Requires: 1,000 Dust | Current Tokens: <span id="prestigeCount">0</span></p>
-                <p style="color: #e040fb; font-size: 11px; margin-top: 3px;">Perks: Permanent Global Multiplier active.</p>
-            </div>
-            <button class="buy-btn" id="prestigeBtn" style="border-color: #e040fb; color: #e040fb;">RESET STATE</button>
-        </div>
+  <div id="game-container">
+    <h1>FLEET COMMAND OS</h1>
+    <div id="prestige-display" style="color: #ffa500; font-size: 14px; font-weight: bold;">Rank: Cosmic Cadet (Prestige 0)</div>
+    
+    <div class="stat-box">
+      🚀 Space Dust: <span id="dust-count">0</span><br>
+      ⚡ Multiplier: <span id="multi-display">1x</span>
     </div>
 
-    <script>
-        // ===================================================
-        // BLOCK 1: GLOBAL STATE TRACKERS (Variables)
-        // ===================================================
-        let spaceDust = 0;
-        let extractionPower = 1;
-        let drillPrice = 15;
+    <button id="click-btn">EXTRACT SPACE DUST</button>
+
+    <div class="shop-box">
+      <h3 style="color: #45f3ff; margin: 5px 0;">UPGRADE BAY</h3>
+      <button id="buy-drone">BUY EXTRACTOR DRONE (Cost: 15 Dust)</button>
+      <button id="prestige-btn" style="border-color: #ffa500; color: #ffa500; margin-top: 15px;">INITIATE QUANTUM RESET</button>
+    </div>
+  </div>
+
+  <script>
+    // --- FOUNDATIONAL STATE SYSTEM ---
+    let spaceDust = 0;
+    let extractionPower = 1;
+    let droneCost = 15;
+    
+    // Prestige Multiplier Variables
+    let prestigeLevel = 0;
+    let globalMultiplier = 1;
+
+    // --- DOM LINK CHANNELS ---
+    const dustDisplay = document.getElementById("dust-count");
+    const multiDisplay = document.getElementById("multi-display");
+    const prestigeDisplay = document.getElementById("prestige-display");
+    const droneBtn = document.getElementById("buy-drone");
+    const clickBtn = document.getElementById("click-btn");
+    const prestigeBtn = document.getElementById("prestige-btn");
+
+    // --- CORE LOGIC MOTORS ---
+
+    // 1. Extraction Command Loop
+    clickBtn.addEventListener("click", () => {
+      spaceDust += extractionPower * globalMultiplier;
+      updateUserInterface();
+    });
+
+    // 2. Upgrade Verification Loop
+    droneBtn.addEventListener("click", (event) => {
+      if (spaceDust >= droneCost) {
+        spaceDust -= droneCost;
+        extractionPower += 1;
+        droneCost = Math.round(droneCost * 1.5); // Exponential price scaling multiplier
+        updateUserInterface();
+      } else {
+        // Triggering the custom floating alert instead of a boring browser popup
+        triggerErrorAlert("ERROR: INSUFFICIENT SPACE DUST!", event);
+      }
+    });
+
+    // 3. Quantum Prestige Reset Engine
+    prestigeBtn.addEventListener("click", (event) => {
+      // User must hit at least 500 space dust to justify a hardware prestige wipe
+      if (spaceDust >= 500) {
+        prestigeLevel++;
+        globalMultiplier = Math.pow(2.75, prestigeLevel); // Compounding x2.75 scaling math
         
-        let passiveVelocity = 0; 
-        let dronePrice = 50;
-
-        // NEW PAGE 4 VARIABLE LIFTS
-        let prestigeTokens = 0;
-        let globalMultiplier = 1;
-
-        // ===================================================
-        // BLOCK 2: THE DOM REGISTER (Interface Hooks)
-        // ===================================================
-        const dustDisplay = document.getElementById("dustCount");
-        const rateDisplay = document.getElementById("passiveRate");
-        const extractButton = document.getElementById("extractBtn");
+        // Resetting the baseline game loops
+        spaceDust = 0;
+        extractionPower = 1;
+        droneCost = 15;
         
-        const drillCostDisplay = document.getElementById("drillCost");
-        const buyDrillButton = document.getElementById("buyDrillBtn");
-        
-        const droneCostDisplay = document.getElementById("droneCost");
-        const buyDroneButton = document.getElementById("buyDroneBtn");
+        updateUserInterface();
+        triggerErrorAlert(`PRESTIGE SYNC COMPLETE! MULTIPLIER LEVEL UP!`, event);
+      } else {
+        triggerErrorAlert("REQUIRES 500 SPACE DUST TO CONVERT CALIBRATION!", event);
+      }
+    });
 
-        // NEW PAGE 4 INTERFACE LINKS
-        const prestigeCountDisplay = document.getElementById("prestigeCount");
-        const prestigeButton = document.getElementById("prestigeBtn");
+    // 4. Dynamic UI Rendering Module
+    function updateUserInterface() {
+      dustDisplay.innerText = Math.round(spaceDust);
+      multiDisplay.innerText = `${globalMultiplier.toFixed(2)}x`;
+      prestigeDisplay.innerText = `Rank: Fleet Admiral (Prestige ${prestigeLevel})`;
+      droneBtn.innerText = `BUY EXTRACTOR DRONE (Cost: ${droneCost} Dust)`;
+    }
 
-        // ===================================================
-        // BLOCK 3: SYSTEM INTERACTION LOGIC (Click Engine)
-        // ===================================================
-        extractButton.addEventListener("click", function() {
-            // Amplified by Page 4's prestige multiplier loop
-            spaceDust = spaceDust + (extractionPower * globalMultiplier);
-            dustDisplay.innerText = spaceDust;
-        });
+    // 5. The Floating Error Script (Hardware Interface System)
+    function triggerErrorAlert(message, event) {
+      const errorText = document.createElement("div");
+      errorText.className = "error-popup";
+      errorText.innerText = message;
 
-        // ===================================================
-        // BLOCK 4: THE DRILL MULTIPLIER SHOP PIPELINE
-        // ===================================================
-        buyDrillButton.addEventListener("click", function() {
-            if (spaceDust >= drillPrice) {
-                spaceDust = spaceDust - drillPrice;
-                extractionPower = extractionPower + 1;
-                drillPrice = Math.floor(drillPrice * 1.45);
+      // Map the coordinate telemetry parameters to the exact pixel location of the mouse cursor
+      errorText.style.left = event.clientX + "px";
+      errorText.style.top = event.clientY + "px";
 
-                dustDisplay.innerText = spaceDust;
-                drillCostDisplay.innerText = drillPrice;
-            } else {
-                alert("Alert: Insufficient raw mineral balance.");
-            }
-        });
+      // If the event layout was triggered via a script call instead of a true click, anchor it centrally
+      if (!event.clientX) {
+        errorText.style.left = "50%";
+        errorText.style.top = "40%";
+      }
 
-        // ===================================================
-        // BLOCK 5: THE PASSTHROUGH AUTO-DRONE PIPELINE
-        // ===================================================
-        buyDroneButton.addEventListener("click", function() {
-            if (spaceDust >= dronePrice) {
-                spaceDust = spaceDust - dronePrice;
-                passiveVelocity = passiveVelocity + 1;
-                dronePrice = Math.floor(dronePrice * 1.55);
+      document.body.appendChild(errorText);
 
-                dustDisplay.innerText = spaceDust;
-                droneCostDisplay.innerText = dronePrice;
-                rateDisplay.innerText = passiveVelocity;
-            } else {
-                alert("Alert: Drone fabrication components unavailable.");
-            }
-        });
-
-        // ===================================================
-        // NEW BLOCK: THE QUANTUM PRESTIGE EQUATION
-        // ===================================================
-        prestigeButton.addEventListener("click", function() {
-            if (spaceDust >= 1000) {
-                prestigeTokens = prestigeTokens + 1;
-                globalMultiplier = 1 + (prestigeTokens * 2); // Adds a permanent 2x per token!
-
-                // Wipe the starter slots back to ground zero
-                spaceDust = 0;
-                extractionPower = 1;
-                drillPrice = 15;
-                passiveVelocity = 0;
-                dronePrice = 50;
-
-                // Full visual environment layout sync
-                dustDisplay.innerText = spaceDust;
-                rateDisplay.innerText = passiveVelocity;
-                drillCostDisplay.innerText = drillPrice;
-                droneCostDisplay.innerText = dronePrice;
-                prestigeCountDisplay.innerText = prestigeTokens;
-
-                alert("System Reset Complete: Global multiplier has advanced!");
-            } else {
-                alert("Alert: Insufficient raw mineral balance. Minimum 1,000 Dust required.");
-            }
-        });
-
-        // ===================================================
-        // BLOCK 6: THE ASYNCHRONOUS ENGINE CLOCK (1000ms Loop)
-        // ===================================================
-        setInterval(function() {
-            // Amplified by Page 4's prestige multiplier loop
-            spaceDust = spaceDust + (passiveVelocity * globalMultiplier);
-            dustDisplay.innerText = spaceDust;
-        }, 1000);
-
-    </script>
+      // Automated Memory Garbage Collection
+      setTimeout(() => {
+        errorText.remove();
+      }, 1200);
+    }
+  </script>
 </body>
 </html>
